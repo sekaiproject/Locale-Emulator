@@ -21,16 +21,6 @@ namespace LEProc
         {
             SystemHelper.DisableDPIScale();
 
-            try
-            {
-                Process.Start(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        "LEUpdater.exe"),
-                    "schedule");
-            }
-            catch
-            {
-            }
-
             if (!GlobalHelper.CheckCoreDLLs())
             {
                 MessageBox.Show(
@@ -51,76 +41,15 @@ namespace LEProc
             //If global config does not exist, create a new one.
             LEConfig.CheckGlobalConfigFile(true);
 
-            if (args.Length == 0)
-            {
-                MessageBox.Show(
-                    "Welcome to Locale Emulator command line tool.\r\n" +
-                    "\r\n" +
-                    "Usage: LEProc.exe\r\n" +
-                    "\tpath\r\n" +
-                    "\t-run path [args]\r\n" +
-                    "\t-runas guid path [args]\r\n" +
-                    "\t-manage path\r\n" +
-                    "\t-global\r\n" +
-                    "\r\n" +
-                    "path\tFull path of the target application.\r\n" +
-                    "guid\tGuid of the target profile (in LEConfig.xml).\r\n" +
-                    "args\tAdditional arguments will be passed to the application.\r\n" +
-                    "\r\n" +
-                    "path\tRun an application with \r\n" +
-                    "\t\t(i) its own profile (if any) or \r\n" +
-                    "\t\t(ii) first global profile (if any) or \r\n" +
-                    "\t\t(iii) default ja-JP profile.\r\n" +
-                    "-run\tRun an application with it's own profile.\r\n" +
-                    "-runas\tRun an application with a global profile of specific Guid.\r\n" +
-                    "-manage\tModify the profile of one application.\r\n" +
-                    "-global\tOpen Global Profile Manager.\r\n" +
-                    "\r\n" +
-                    "\r\n" +
-                    "Have a suggestion? Want to report a bug? You're welcome! \r\n" +
-                    "Go to https://github.com/xupefei/Locale-Emulator/issues.\r\n" +
-                    "\r\n" +
-                    "\r\n" +
-                    "You can press CTRL+C to copy this message to your clipboard.\r\n",
-                    "Locale Emulator Version " + GlobalHelper.GetLEVersion()
-                );
+            //RunWithDefaultProfile("system/Memoria.exe");
 
-                GlobalHelper.ShowErrorDebugMessageBox("SYSTEM_REPORT", 0);
-
-                return;
-            }
+            String exeLocation = "system\\Memoria.exe";
 
             try
             {
-                Args = args;
-
-                switch (Args[0])
+                if (File.Exists(exeLocation))
                 {
-                    case "-run": //-run %APP%
-                        RunWithIndependentProfile(Args[1]);
-                        break;
-
-                    case "-manage": //-manage %APP%
-                        Process.Start(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                                "LEGUI.exe"),
-                            $"\"{Args[1]}.le.config\"");
-                        break;
-
-                    case "-global": //-global
-                        Process.Start(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                            "LEGUI.exe"));
-                        break;
-
-                    case "-runas": //-runas %GUID% %APP%
-                        RunWithGlobalProfile(Args[1], Args[2]);
-                        break;
-
-                    default:
-                        if (File.Exists(Args[0]))
-                        {
-                            RunWithDefaultProfile(Args[0]);
-                        }
-                        break;
+                    RunWithDefaultProfile(exeLocation);
                 }
             }
             catch
@@ -213,10 +142,6 @@ namespace LEProc
                         ? $"{absPath} "
                         : $"\"{absPath}\" ";
 
-                    // use arguments in le.config, prior to command line arguments
-                    commandLine += string.IsNullOrEmpty(profile.Parameter) && Args.Skip(argumentsStart).Any()
-                        ? Args.Skip(argumentsStart).Aggregate((a, b) => $"{a} {b}")
-                        : profile.Parameter;
                 }
                 else
                 {
